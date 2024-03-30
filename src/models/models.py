@@ -6,6 +6,9 @@ Base = declarative_base()
 
 
 class GPSData(Base):
+    """
+    Модель данных для хранения информации о GPS-данных в базе данных.
+    """
     __tablename__ = 'GPS'
 
     id = Column(Integer, primary_key=True)

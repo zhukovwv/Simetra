@@ -1,10 +1,8 @@
-from fastapi import FastAPI, Depends, HTTPException
-from sqlalchemy import text
+from fastapi import FastAPI, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database import get_async_session
-from src.functions import is_valid_datetime
-from src.schemas import GPSDataResponse
+from src.functions import fetch_last_geometry, fetch_vehicle_last_geometry, fetch_vehicle_track
 
 app = FastAPI(
     title="GPS Service"
@@ -12,64 +10,50 @@ app = FastAPI(
 
 
 @app.get('/vehicles/')
-async def vehicles_last_geometry(session: AsyncSession = Depends(get_async_session)):
-    query = text(
-        "SELECT DISTINCT ON (vehicle_id) vehicle_id, ST_AsText(location) AS geom "
-        'FROM "GPS"'
-        "ORDER BY vehicle_id, gps_time DESC;"
-    )
-    result = await session.execute(query)
-    rows = result.all()
+async def get_vehicles_last_geometry(session: AsyncSession = Depends(get_async_session)):
+    """
+    Обработчик для получения последнего местоположения всех транспортных средств.
 
-    # Преобразуем результаты запроса в список объектов GPSDataResponse
-    gps_data_list = []
-    for row in rows:
-        gps_data_list.append(GPSDataResponse(vehicle_id=row.vehicle_id, location=row.geom))
-    return gps_data_list
+    :param session: Асинхронная сессия базы данных.
+    :type session: sqlalchemy.ext.asyncio.AsyncSession
+    :return: Список объектов местоположений транспортных средств.
+    :rtype: list
+    """
+    return await fetch_last_geometry(session)
 
 
 @app.get('/vehicles/{vehicle_id}')
-async def vehicle_last_geometry(vehicle_id: int, session: AsyncSession = Depends(get_async_session)):
-    query = text(
-        "SELECT vehicle_id, ST_AsText(location) AS geom "
-        'FROM "GPS" '
-        'WHERE vehicle_id = :vehicle_id '
-        'ORDER BY gps_time DESC '
-        'LIMIT 1;'
-    )
-    result = await session.execute(query, {"vehicle_id": vehicle_id})
-    row = result.first()
-    if row:
-        return GPSDataResponse(vehicle_id=row.vehicle_id, location=row.geom)
-    else:
-        return None
+async def get_vehicle_last_geometry(vehicle_id: int, session: AsyncSession = Depends(get_async_session)):
+    """
+    Обработчик для получения последнего местоположения конкретного транспортного средства.
+
+    :param vehicle_id: Идентификатор транспортного средства.
+    :type vehicle_id: int
+    :param session: Асинхронная сессия базы данных.
+    :type session: sqlalchemy.ext.asyncio.AsyncSession
+    :return: Объект местоположения транспортного средства.
+    :rtype: object
+    """
+    return await fetch_vehicle_last_geometry(vehicle_id, session)
 
 
 @app.get('/vehicles/{vehicle_id}/track/{start_datetime}/{end_datetime}')
-async def vehicle_track(vehicle_id: int,
-                        start_datetime: str,
-                        end_datetime: str,
-                        session: AsyncSession = Depends(get_async_session)):
-    if is_valid_datetime(start_datetime) and is_valid_datetime(end_datetime):
-        raise HTTPException(status_code=400, detail="Not valid start_datetime or end_datetime ('%Y-%m-%d %H:%M:%S')")
+async def get_vehicle_track(vehicle_id: int,
+                            start_datetime: str,
+                            end_datetime: str,
+                            session: AsyncSession = Depends(get_async_session)):
+    """
+    Обработчик для получения трека движения конкретного транспортного средства за определенный период времени.
 
-    if start_datetime >= end_datetime:
-        raise HTTPException(status_code=400, detail="The start date and time must be less than the end date.")
-
-    query = text(
-        "SELECT ST_AsText(location) AS geom "
-        'FROM "GPS" '
-        "WHERE vehicle_id = :vehicle_id "
-        "AND gps_time >= :start_datetime "
-        "AND gps_time <= :end_datetime "
-        "ORDER BY gps_time;"
-    )
-    result = await session.execute(query, {"vehicle_id": vehicle_id,
-                                           "start_datetime": start_datetime,
-                                           "end_datetime": end_datetime})
-    rows = result.all()
-
-    gps_data_list = []
-    for row in rows:
-        gps_data_list.append(row.geom)
-    return gps_data_list
+    :param vehicle_id: Идентификатор транспортного средства.
+    :type vehicle_id: int
+    :param start_datetime: Начальная дата и время в формате '%Y-%m-%d %H:%M:%S'.
+    :type start_datetime: str
+    :param end_datetime: Конечная дата и время в формате '%Y-%m-%d %H:%M:%S'.
+    :type end_datetime: str
+    :param session: Асинхронная сессия базы данных.
+    :type session: sqlalchemy.ext.asyncio.AsyncSession
+    :return: Список координат транспортного средства за указанный период времени.
+    :rtype: list
+    """
+    return await fetch_vehicle_track(vehicle_id, start_datetime, end_datetime, session)
