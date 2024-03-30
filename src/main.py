@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database import get_async_session
 from src.functions import is_valid_datetime
+from src.schemas import GPSDataResponse
 
 app = FastAPI(
     title="GPS Service"
