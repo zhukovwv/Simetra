@@ -1,28 +1,13 @@
-from datetime import datetime
-
-from fastapi import FastAPI, Depends, HTTPException
-from pydantic import BaseModel
+from fastapi import FastAPI, Depends, HTTPExceptionфв
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database import get_async_session
+from src.database import get_async_session
+from src.functions import is_valid_datetime
 
 app = FastAPI(
     title="GPS Service"
 )
-
-
-class GPSDataResponse(BaseModel):
-    vehicle_id: int
-    location: str
-
-
-async def is_valid_datetime(date_str: str) -> bool:
-    try:
-        datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')
-        return True
-    except ValueError:
-        return False
 
 
 @app.get('/vehicles/')

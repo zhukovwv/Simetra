@@ -1,4 +1,7 @@
+from fastapi import Depends
 from openpyxl.reader.excel import load_workbook
+from pydantic import FilePath
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import get_async_session
 from models.models import GPSData
@@ -6,12 +9,11 @@ from models.models import GPSData
 import datetime
 
 
-async def load_data_from_excel(file_path):
+async def load_data_from_excel(file_path: FilePath, session: AsyncSession = Depends(get_async_session)) -> None:
     # Подключение к Excel файлу
     wb = load_workbook(filename=file_path)
     ws = wb.active
 
-    session = await get_async_session()
     try:
         # Проход по строкам и столбцам в Excel и добавление данных в базу данных
         for row in ws.iter_rows(min_row=2, values_only=True):
