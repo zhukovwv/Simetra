@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPExceptionфв
+from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
