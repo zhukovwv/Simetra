@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import get_async_session
 from functions import fetch_last_geometry, fetch_vehicle_last_geometry, fetch_vehicle_track
+from services import load_data_from_excel
 
 app = FastAPI(
     title="GPS Service"
@@ -57,3 +58,14 @@ async def get_vehicle_track(vehicle_id: int,
     :rtype: list
     """
     return await fetch_vehicle_track(vehicle_id, start_datetime, end_datetime, session)
+
+
+# Только для теста!
+@app.get('/load/gpsdata')
+async def load_test_data():
+    """
+    Одно нажатие и тестовые gps данные будут в PostGis
+    """
+    file_path = "data/2_5420464171701519891.xlsx"
+    await load_data_from_excel(file_path)
+    return "GPS data loaded successfully!"
