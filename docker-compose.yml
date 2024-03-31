@@ -1,0 +1,23 @@
+version: "3.7"
+services:
+  postgis_db:
+    image: postgis/postgis:latest
+    container_name: postgis_simetra_db
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+    ports:
+      - "${DB_PORT}:5432"
+
+  app:
+    build:
+      context: .
+    env_file:
+      - .env
+    container_name: fastapi_simetra_app
+    command: ["/fastapi_simetra_app/app.sh"]
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgis_db
