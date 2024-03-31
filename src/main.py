@@ -1,8 +1,8 @@
 from fastapi import FastAPI, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.database import get_async_session
-from src.functions import fetch_last_geometry, fetch_vehicle_last_geometry, fetch_vehicle_track
+from database import get_async_session
+from functions import fetch_last_geometry, fetch_vehicle_last_geometry, fetch_vehicle_track
 
 app = FastAPI(
     title="GPS Service"

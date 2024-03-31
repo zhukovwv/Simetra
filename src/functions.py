@@ -1,5 +1,5 @@
 from datetime import datetime
-from src.schemas import GPSDataResponse
+from schemas import GPSDataResponse
 from fastapi import HTTPException
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
